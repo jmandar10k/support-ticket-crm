@@ -11,7 +11,7 @@ document.getElementById(
 ).value
 
 let url=
-"http://127.0.0.1:8000/tickets?"
+"/tickets"
 
 if(search){
 
