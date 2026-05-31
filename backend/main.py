@@ -1,13 +1,10 @@
+from backend.database import engine, SessionLocal
+from backend import models
+from backend import schemas
+
 from fastapi import FastAPI,Depends
 from sqlalchemy.orm import Session
-from database import engine,SessionLocal
-from models import Base,Ticket,Note
-from schemas import (
-TicketCreate,
-TicketResponse,
-TicketDetail,
-TicketUpdate
-)
+
 from typing import List
 from sqlalchemy import func
 from fastapi import HTTPException
