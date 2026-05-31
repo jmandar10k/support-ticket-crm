@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<title>
+
+Support Ticket Details
+
+</title>
+
+<link
+rel="stylesheet"
+href="/static/style.css"
+>
+
+</head>
+
+<body>
+
+<div class="container">
+
+<button
+
+onclick=
+
+window.location.href='/'
+
+>
+
+← Dashboard
+
+
+
+</button>
+
+<h1>
+
+Ticket Details
+
+</h1>
+
+<div id="details">
+
+</div>
+
+<h3>
+
+Update Status
+
+</h3>
+
+<select id="status">
+
+<option>
+
+Open
+
+</option>
+
+<option>
+
+In Progress
+
+</option>
+
+<option>
+
+Closed
+
+</option>
+
+</select>
+
+<br><br>
+
+<textarea
+
+id="notes"
+
+placeholder="Add Note"
+
+>
+
+</textarea>
+
+<br><br>
+
+<button onclick="updateTicket()">
+
+Update
+
+</button>
+
+<p id="message">
+
+</p>
+
+</div>
+
+<script src="/static/ticket.js">
+
+</script>
+
+</body>
+
+</html>

@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+
+<title>Ticket Dashboard</title>
+<link
+rel="stylesheet"
+href="/static/style.css"
+>
+
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>
+
+Support CRM Dashboard
+
+</h1>
+
+<button
+
+onclick=
+
+window.location.href='/create'
+
+>
+
++ Create Ticket
+
+</button>
+
+<br><br>
+
+<input
+id="search"
+placeholder="Search Tickets"
+>
+
+<select id="status">
+
+<option value="">
+
+All Status
+
+</option>
+
+<option>
+
+Open
+
+</option>
+
+<option>
+
+In Progress
+
+</option>
+
+<option>
+
+Closed
+
+</option>
+
+</select>
+
+<button onclick="loadTickets()">
+
+Search
+
+</button>
+
+<br><br>
+
+<table border="1">
+
+<thead>
+
+<tr>
+
+<th>ID</th>
+
+<th>Name</th>
+
+<th>Subject</th>
+
+<th>Status</th>
+
+</tr>
+
+</thead>
+
+<tbody id="ticketTable">
+
+</tbody>
+
+</table>
+
+<script src="/static/index.js">
+
+</script>
+
+</div>
+</body>
+
+</html>

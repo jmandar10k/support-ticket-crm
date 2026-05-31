@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+    <title>Create Ticket</title>
+    <link
+    rel="stylesheet"
+    href="/static/style.css"
+    >
+
+</head>
+<body>
+
+<div class="container">
+
+   <h1>
+
+Create Support Ticket
+
+</h1>
+
+    <button
+
+    onclick=
+
+    window.location.href='/'
+
+    >
+
+    ← Dashboard
+
+    </button>
+
+    <br><br>
+
+    <form id="ticketForm">
+
+        <input
+            type="text"
+            id="customer_name"
+            placeholder="Customer Name"
+            required
+        >
+
+        <br><br>
+
+        <input
+            type="email"
+            id="customer_email"
+            placeholder="Customer Email"
+            required
+        >
+
+        <br><br>
+
+        <input
+            type="text"
+            id="subject"
+            placeholder="Subject"
+            required
+        >
+
+        <br><br>
+
+        <textarea
+            id="description"
+            placeholder="Description"
+        ></textarea>
+
+        <br><br>
+
+        <button type="submit">
+
+            Create Ticket
+
+        </button>
+
+    </form>
+
+    <p id="result"></p>
+
+<script src="/static/create_ticket.js"></script>
+
+</div>
+</body>
+</html>
