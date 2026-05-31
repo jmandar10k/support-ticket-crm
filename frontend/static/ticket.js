@@ -21,12 +21,13 @@ async function loadTicket(){
         data.status
 
 
-    document.getElementById(
-        "details"
-    ).innerHTML =
+   document.getElementById(
+"details"
+).innerHTML=
 
 `
-<div>
+
+<div class="card">
 
 <h2>
 
@@ -36,7 +37,26 @@ ${data.ticket_id}
 
 <p>
 
-<b>Customer:</b>
+<b>Status:</b>
+
+${data.status}
+
+</p>
+
+</div>
+
+
+<div class="card">
+
+<h3>
+
+Customer Information
+
+</h3>
+
+<p>
+
+<b>Name:</b>
 
 ${data.customer_name}
 
@@ -49,6 +69,17 @@ ${data.customer_name}
 ${data.customer_email}
 
 </p>
+
+</div>
+
+
+<div class="card">
+
+<h3>
+
+Issue Information
+
+</h3>
 
 <p>
 
@@ -66,55 +97,32 @@ ${data.description}
 
 </p>
 
-<p>
+</div>
 
-<b>Status:</b>
 
-<span class="status">
-
-${data.status}
-
-</span>
-
-</p>
-
+<div class="card">
 
 <h3>
 
-Notes
+Notes History
 
 </h3>
 
 <ul>
 
-${
-data.notes.map(
+${data.notes.map(
 
-note =>
-
-`
+n => `
 
 <li>
 
-<b>
-
-${new Date(
-note.created_at
-).toLocaleString()}
-
-</b>
-
-<br>
-
-${note.note_text}
+${n.note_text}
 
 </li>
 
 `
 
-).join("")
-
-}
+).join("")}
 
 </ul>
 
