@@ -1,59 +1,114 @@
-from sqlalchemy import Column,String,Integer,DateTime
-from backend.database import Base
-from datetime import datetime
-from sqlalchemy import ForeignKey
+
+from sqlalchemy import (
+    Column,
+    String,
+    Integer,
+    DateTime,
+    ForeignKey,
+    Text
+)
+
 from sqlalchemy.orm import relationship
+from datetime import datetime
+from backend.database import Base
+
+
 
 class Ticket(Base):
 
-    __tablename__="tickets"
+    __tablename__ = "tickets"
 
-    id=Column(Integer,primary_key=True,index=True)
+    id = Column(
+        Integer,
+        primary_key=True,
+        index=True
 
-    ticket_id=Column(String,unique=True)
+    )
 
-    customer_name=Column(String)
 
-    customer_email=Column(String)
+    ticket_id = Column(
+        String(20),
+        unique=True,
+        nullable=False
 
-    subject=Column(String)
+    )
 
-    description=Column(String)
 
-    status=Column(String,default="Open")
+    customer_name = Column(
+        String(100),
+        nullable=False
 
-    created_at=Column(
+    )
+
+
+    customer_email = Column(
+        String(150),
+        nullable=False
+
+    )
+
+
+    subject = Column(
+        String(200),
+        nullable=False
+
+    )
+
+
+    description = Column(
+        Text
+
+    )
+
+
+    status = Column(
+        String(30),
+        default="Open"
+
+    )
+
+
+    created_at = Column(
         DateTime,
         default=datetime.utcnow
+
     )
-    notes=relationship(
+
+
+    notes = relationship(
         "Note",
-        backref="ticket"
+        backref="ticket",
+        cascade="all, delete"
+
     )
-    
+
 
 
 
 class Note(Base):
 
-    __tablename__="notes"
+    __tablename__ = "notes"
 
-    id=Column(
+    id = Column(
         Integer,
         primary_key=True,
         index=True
+
     )
 
-    ticket_id=Column(
-        String,
+    ticket_id = Column(
+        String(20),
         ForeignKey(
             "tickets.ticket_id"
         )
+
     )
-
-    note_text=Column(String)
-
-    created_at=Column(
+    note_text = Column(
+        Text
+    )
+    created_at = Column(
         DateTime,
         default=datetime.utcnow
+
     )
+

@@ -1,40 +1,78 @@
+
 async function loadTickets(){
 
-const search=
+const search =
+
 document.getElementById(
 "search"
 ).value
 
-const status=
+
+const status =
+
 document.getElementById(
 "status"
 ).value
 
-let url=
-"/tickets"
+
+const params =
+
+new URLSearchParams()
+
 
 if(search){
 
-url+=`search=${search}&`
+params.append(
+
+"search",
+
+search
+
+)
 
 }
+
 
 if(status){
 
-url+=`status=${status}`
+params.append(
+
+"status",
+
+status
+
+)
 
 }
 
-const response=
+
+const url =
+
+`/tickets?${params.toString()}`
+
+
+console.log(url)
+
+
+const response =
+
 await fetch(url)
 
-const tickets=
+
+const tickets =
+
 await response.json()
 
-const table=
+
+const table =
+
 document.getElementById(
 "ticketTable"
 )
+
+
+table.innerHTML=""
+
 
 if(tickets.length===0){
 
@@ -61,7 +99,9 @@ return
 
 tickets.forEach(ticket=>{
 
-table.innerHTML +=`
+table.innerHTML +=
+
+`
 
 <tr>
 
@@ -89,11 +129,7 @@ ${ticket.subject}
 
 <td>
 
-<span class="status">
-
 ${ticket.status}
-
-</span>
 
 </td>
 
@@ -104,5 +140,6 @@ ${ticket.status}
 })
 
 }
+
 
 loadTickets()
