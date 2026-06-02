@@ -55,3 +55,9 @@ class TicketUpdate(BaseModel):
 
     status:str
     notes:str
+
+class ChatRequest(BaseModel):
+    question:str
+
+class ChatResponse(BaseModel):
+    answer:str

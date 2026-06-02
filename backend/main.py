@@ -1,6 +1,7 @@
 
 from pathlib import Path
 from typing import List
+import re
 
 from fastapi import (
     FastAPI,
@@ -29,19 +30,36 @@ from backend.models import (
 )
 
 from backend.schemas import (
-
     TicketCreate,
-
     TicketResponse,
-
     TicketDetail,
-
-    TicketUpdate
-
+    TicketUpdate,
+    ChatRequest,
+    ChatResponse
 )
 
+from groq import Groq
+
+import os
+from dotenv import load_dotenv
+
+load_dotenv(
+override=True
+)
+
+print(
+os.getenv(
+"GROQ_API_KEY"
+))
 
 app = FastAPI()
+client = Groq(
+api_key=
+os.getenv(
+
+"GROQ_API_KEY"
+)
+)
 
 
 BASE_DIR = Path(
@@ -456,3 +474,181 @@ def update_ticket(
         "success": True
 
     }
+
+
+@app.post(
+
+"/chat",
+
+response_model=ChatResponse
+
+)
+
+def chat(
+
+data:ChatRequest,
+
+db:Session=Depends(
+
+get_db
+
+)
+
+):
+
+    question = data.question.lower()
+
+
+    tickets = db.query(
+
+        Ticket
+
+    ).order_by(
+
+        Ticket.created_at.desc()
+
+    ).limit(
+
+        50
+
+    ).all()
+
+
+    context = ""
+
+
+    for t in tickets:
+
+        context += f"""
+
+Ticket ID:
+
+{t.ticket_id}
+
+Customer Name:
+
+{t.customer_name}
+
+Customer Email:
+
+{t.customer_email}
+
+Subject:
+
+{t.subject}
+
+Status:
+
+{t.status}
+
+Description:
+
+{t.description}
+
+Created At:
+
+{t.created_at}
+
+-----------------------------
+
+"""
+
+
+    response = client.chat.completions.create(
+
+        model=
+
+        "openai/gpt-oss-120b",
+
+        messages=[
+
+            {
+
+                "role":"system",
+
+                "content": """
+
+You are an AI assistant for customer support CRM.
+
+
+Rules:
+
+1. ONLY answer using provided ticket data.
+
+2. Never invent information.
+
+3. If user asks counts, calculate using provided ticket data.
+
+4. If user asks customer names, provide them.
+
+5. If user asks summaries, summarize.
+
+6. If user asks open tickets, analyze ticket statuses.
+
+7. Format answers cleanly.
+
+8. Use bullets where useful.
+
+9. Avoid excessive punctuation.
+
+10. Never create markdown tables.
+
+11. If user asks for ticket details, format like:
+
+Ticket ID: XXX
+
+Customer: XXX
+
+Subject: XXX
+
+Status: XXX
+
+Description: XXX
+
+
+12. If answer cannot be found in ticket data say:
+
+"I could not find that information in available tickets."
+
+13. Keep answers concise and readable.
+
+"""
+
+            },
+
+            {
+
+                "role":"user",
+
+                "content":
+
+f"""
+
+User Question:
+
+{question}
+
+
+Available Ticket Data:
+
+{context}
+
+"""
+
+            }
+
+        ]
+
+    )
+
+
+    return {
+
+        "answer":
+
+        response.choices[0]
+
+        .message.content
+
+    }
+
