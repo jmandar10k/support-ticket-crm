@@ -112,3 +112,116 @@ class Note(Base):
 
     )
 
+
+
+class StatusHistory(Base):
+
+    __tablename__="status_history"
+
+
+    id=Column(
+
+        Integer,
+
+        primary_key=True,
+
+        index=True
+
+    )
+
+
+    ticket_id=Column(
+
+        String(20),
+
+        ForeignKey(
+
+            "tickets.ticket_id"
+
+        )
+
+    )
+
+
+    old_status=Column(
+
+        String(50)
+
+    )
+
+
+    new_status=Column(
+
+        String(50)
+
+    )
+
+
+    changed_at=Column(
+
+        DateTime,
+
+        default=datetime.utcnow
+
+    )
+
+
+
+
+class User(Base):
+
+    __tablename__="users"
+
+
+    id=Column(
+
+        Integer,
+
+        primary_key=True,
+
+        index=True
+
+    )
+
+
+    name=Column(
+
+        String(100)
+
+    )
+
+
+    email=Column(
+
+        String(120),
+
+        unique=True,
+
+        index=True
+
+    )
+
+
+    hashed_password=Column(
+
+        String(255)
+
+    )
+
+
+    role=Column(
+
+        String(50),
+
+        default="agent"
+
+    )
+
+
+    created_at=Column(
+
+        DateTime,
+
+        default=datetime.utcnow
+
+    )

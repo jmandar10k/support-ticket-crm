@@ -1,91 +1,193 @@
-const form = document.getElementById(
-    "ticketForm"
+
+const form=
+
+document.getElementById(
+"ticketForm"
 )
 
+
+function handleUnauthorized(
+
+response
+
+){
+
+if(
+
+response.status===401
+
+){
+
+localStorage.clear()
+
+window.location.href=
+
+"/login-page"
+
+return true
+
+}
+
+return false
+
+}
+
+
 form.addEventListener(
-    "submit",
 
-    async function(event){
+"submit",
 
-        event.preventDefault()
+async function(event){
 
-        const data={
+event.preventDefault()
 
-            customer_name:
-            document.getElementById(
-                "customer_name"
-            ).value,
+try{
 
-            customer_email:
-            document.getElementById(
-                "customer_email"
-            ).value,
+const data={
 
-            subject:
-            document.getElementById(
-                "subject"
-            ).value,
+customer_name:
 
-            description:
-            document.getElementById(
-                "description"
-            ).value
-        }
+document.getElementById(
 
-        const response=
-        await fetch(
+"customer_name"
 
-            "/tickets",
-
-            {
-
-                method:"POST",
-
-                headers:{
-                    "Content-Type":
-                    "application/json"
-                },
-
-                body:JSON.stringify(
-                    data
-                )
-
-            }
-
-        )
-
-        const result=
-        await response.json()
-
-                    document.getElementById(
-            "result"
-        ).className =
-
-        "success"
+).value,
 
 
-        document.getElementById(
-            "result"
-        ).innerText =
+customer_email:
 
-        "Created Successfully: "
+document.getElementById(
 
-        + result.ticket_id
+"customer_email"
+
+).value,
 
 
+subject:
 
-        setTimeout(
+document.getElementById(
 
-        ()=>{
+"subject"
 
-        window.location.href="/"
+).value,
 
-        },
 
-        1500
+description:
 
-        )
+document.getElementById(
 
-    }
+"description"
+
+).value
+
+}
+
+
+const response=
+
+await fetch(
+
+"/tickets",
+
+{
+
+method:"POST",
+
+headers:{
+
+"Content-Type":
+
+"application/json",
+
+Authorization:
+
+`Bearer ${localStorage.getItem("token")}`
+
+},
+
+body:
+
+JSON.stringify(
+
+data
+
+)
+
+}
+
+)
+
+
+if(
+
+handleUnauthorized(
+
+response
+
+)
+
+){
+
+return
+
+}
+
+
+const result=
+
+await response.json()
+
+
+document.getElementById(
+
+"result"
+
+).className=
+
+"success"
+
+
+document.getElementById(
+
+"result"
+
+).innerText=
+
+"Created Successfully: "
+
++
+
+result.ticket_id
+
+
+setTimeout(
+
+()=>{
+
+location.replace(
+
+"/dashboard"
+
+)
+
+},
+
+1000
+
+)
+
+}
+
+catch(error){
+
+console.log(
+
+error
+
+)
+
+}
+
+}
 
 )

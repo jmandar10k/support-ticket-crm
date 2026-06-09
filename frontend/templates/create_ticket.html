@@ -19,17 +19,15 @@ Create Support Ticket
 
 </h1>
 
-    <button
+<button
 
-    onclick=
+onclick="window.location.href='/dashboard'"
 
-    window.location.href='/'
+>
 
-    >
+← Dashboard
 
-    ← Dashboard
-
-    </button>
+</button>
 
     <br><br>
 
@@ -78,6 +76,14 @@ Create Support Ticket
     </form>
 
     <p id="result"></p>
+
+<script src="/static/auth.js"></script>
+
+<script>
+
+checkAuth()
+
+</script>
 
 <script src="/static/create_ticket.js"></script>
 

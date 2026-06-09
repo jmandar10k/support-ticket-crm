@@ -322,3 +322,50 @@ cursor:pointer;
 
 }
 
+#syncBtn{
+
+padding:10px 18px;
+
+margin-left:10px;
+
+background:#16a34a;
+
+color:white;
+
+border:none;
+
+border-radius:8px;
+
+cursor:pointer;
+
+}
+
+
+.timeline{
+
+margin-top:20px;
+
+display:flex;
+
+flex-direction:column;
+
+gap:15px;
+
+}
+
+
+.timeline-item{
+
+padding:12px;
+
+border-left:
+
+4px solid #2563eb;
+
+background:
+
+#f8f8f8;
+
+border-radius:8px;
+
+}

@@ -1,4 +1,40 @@
 
+document.getElementById(
+
+"welcomeUser"
+
+).innerText=
+
+`Welcome, ${localStorage.getItem("name")}`
+
+
+function handleUnauthorized(
+
+response
+
+){
+
+if(
+
+response.status===401
+
+){
+
+localStorage.clear()
+
+window.location.href=
+
+"/login-page"
+
+return true
+
+}
+
+return false
+
+}
+
+
 async function loadTickets(){
 
 const search =
@@ -51,12 +87,40 @@ const url =
 `/tickets?${params.toString()}`
 
 
-console.log(url)
-
-
 const response =
 
-await fetch(url)
+await fetch(
+
+url,
+
+{
+
+headers:{
+
+Authorization:
+
+`Bearer ${localStorage.getItem("token")}`
+
+}
+
+}
+
+)
+
+
+if(
+
+handleUnauthorized(
+
+response
+
+)
+
+){
+
+return
+
+}
 
 
 const tickets =
@@ -145,6 +209,131 @@ ${ticket.status}
 loadTickets()
 
 
+async function syncEmails(){
+
+const btn =
+
+document.getElementById(
+"syncBtn"
+)
+
+
+btn.disabled=true
+
+btn.innerText=
+
+"Syncing..."
+
+
+try{
+
+const response=
+
+await fetch(
+
+"/sync-emails",
+
+{
+
+method:"POST",
+
+headers:{
+
+Authorization:
+
+`Bearer ${localStorage.getItem("token")}`
+
+}
+
+}
+
+)
+
+
+if(
+
+handleUnauthorized(
+
+response
+
+)
+
+){
+
+return
+
+}
+
+
+if(
+
+!response.ok
+
+){
+
+throw new Error(
+
+"Backend Error"
+
+)
+
+}
+
+
+const data=
+
+await response.json()
+
+
+alert(
+
+`Email Sync Complete
+
+Imported:
+
+${data.tickets_created}
+
+Skipped Existing:
+
+${data.skipped}
+
+Processed:
+
+${data.processed}`
+
+)
+
+
+loadTickets()
+
+}
+
+catch(error){
+
+console.log(
+error
+)
+
+alert(
+
+"Email Sync Failed"
+
+)
+
+}
+
+finally{
+
+btn.disabled=false
+
+btn.innerText=
+
+"Sync Emails"
+
+}
+
+}
+
 
 async function askBot(){
 
@@ -221,7 +410,11 @@ headers:{
 
 "Content-Type":
 
-"application/json"
+"application/json",
+
+Authorization:
+
+`Bearer ${localStorage.getItem("token")}`
 
 },
 
@@ -234,6 +427,21 @@ question
 }
 
 )
+
+
+if(
+
+handleUnauthorized(
+
+response
+
+)
+
+){
+
+return
+
+}
 
 
 const data=
@@ -258,5 +466,16 @@ bots.length-1
 messages.scrollTop=
 
 messages.scrollHeight
+
+}
+
+
+function logout(){
+
+localStorage.clear()
+
+window.location.href=
+
+"/login-page"
 
 }

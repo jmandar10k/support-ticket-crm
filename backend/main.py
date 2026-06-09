@@ -11,12 +11,24 @@ from fastapi import (
 )
 
 from fastapi.middleware.cors import CORSMiddleware
+from backend.gmail_service import get_gmail_service
+from backend.email_cleaner import clean_email_body
+from backend.auth import (
+hash_password,
+verify_password,
+create_access_token
+)
 
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse,RedirectResponse
+from fastapi.security import HTTPBearer
+from fastapi import Security
+from backend.auth import verify_token
 
 from sqlalchemy.orm import Session
 from sqlalchemy import func, or_
+from sqlalchemy.exc import IntegrityError
 
 from backend.database import (
     engine,
@@ -26,7 +38,7 @@ from backend.database import (
 from backend.models import (
     Base,
     Ticket,
-    Note
+    Note,StatusHistory,User
 )
 
 from backend.schemas import (
@@ -35,7 +47,7 @@ from backend.schemas import (
     TicketDetail,
     TicketUpdate,
     ChatRequest,
-    ChatResponse
+    ChatResponse,UserSignup,UserResponse,LoginRequest
 )
 
 from groq import Groq
@@ -53,6 +65,46 @@ os.getenv(
 ))
 
 app = FastAPI()
+security=HTTPBearer()
+
+
+def get_current_user(
+
+credentials=
+
+Security(
+
+security
+
+)
+
+):
+
+    token=credentials.credentials
+
+
+    email=verify_token(
+
+        token
+
+    )
+
+
+    if not email:
+
+        raise HTTPException(
+
+            status_code=401,
+
+            detail=
+
+            "Invalid Token"
+
+        )
+
+
+    return email
+
 client = Groq(
 api_key=
 os.getenv(
@@ -140,32 +192,27 @@ def get_db():
 
 
 
-@app.get("/")
+@app.get(
 
-def dashboard():
+"/"
 
-    return FileResponse(
+)
 
-        TEMPLATE_DIR
+def root():
 
-        / "index.html"
+    return RedirectResponse(
+
+        "/login-page"
 
     )
 
 
 
 @app.get("/create")
-
 def create_page():
-
     return FileResponse(
-
-        TEMPLATE_DIR
-
-        / "create_ticket.html"
-
+        TEMPLATE_DIR / "create_ticket.html"
     )
-
 
 
 @app.get("/ticket")
@@ -188,8 +235,22 @@ def create_ticket(
 
     ticket: TicketCreate,
 
-    db: Session = Depends(
-        get_db
+   current_user:
+
+    str=
+
+    Depends(
+
+    get_current_user
+
+    ),
+
+    db:Session=
+
+    Depends(
+
+    get_db
+
     )
 
 ):
@@ -285,11 +346,10 @@ def get_tickets(
 
     search: str = None,
 
-    db: Session = Depends(
-        get_db
-    )
+    current_user:str= Depends( get_current_user ), 
+    db:Session= Depends( get_db ) ):
 
-):
+
 
     query = db.query(
         Ticket
@@ -352,35 +412,45 @@ def get_tickets(
 
 
 
+
 @app.get(
 
-    "/tickets/{ticket_id}",
-
-    response_model=
-
-    TicketDetail
+    "/tickets/{ticket_id}"
 
 )
 
+
 def get_ticket(
 
-    ticket_id: str,
+ticket_id:str,
 
-    db: Session = Depends(
-        get_db
-    )
+current_user:str=
+
+Depends(
+
+get_current_user
+
+),
+
+db:Session=
+
+Depends(
+
+get_db
+
+)
 
 ):
 
-    ticket = db.query(
+
+
+    ticket=db.query(
+
         Ticket
+
     ).filter(
 
-        Ticket.ticket_id
-
-        ==
-
-        ticket_id
+        Ticket.ticket_id==ticket_id
 
     ).first()
 
@@ -391,14 +461,97 @@ def get_ticket(
 
             status_code=404,
 
-            detail=
-
-            "Ticket Not Found"
+            detail="Ticket Not Found"
 
         )
 
 
-    return ticket
+    history=db.query(
+
+        StatusHistory
+
+    ).filter(
+
+        StatusHistory.ticket_id==ticket_id
+
+    ).order_by(
+
+        StatusHistory.changed_at
+
+    ).all()
+
+
+    return {
+
+        "ticket_id":
+
+        ticket.ticket_id,
+
+        "customer_name":
+
+        ticket.customer_name,
+
+        "customer_email":
+
+        ticket.customer_email,
+
+        "subject":
+
+        ticket.subject,
+
+        "description":
+
+        ticket.description,
+
+        "status":
+
+        ticket.status,
+
+
+        "notes":[
+
+            {
+
+                "note_text":
+
+                n.note_text,
+
+                "created_at":
+
+                n.created_at
+
+            }
+
+            for n in ticket.notes
+
+        ],
+
+
+        "history":[
+
+            {
+
+                "old_status":
+
+                h.old_status,
+
+                "new_status":
+
+                h.new_status,
+
+                "changed_at":
+
+                h.changed_at
+
+            }
+
+            for h in history
+
+        ]
+
+    }
+
+
 
 
 
@@ -408,20 +561,36 @@ def get_ticket(
 
 )
 
+
 def update_ticket(
 
-    ticket_id: str,
+ticket_id:str,
 
-    data: TicketUpdate,
+data:TicketUpdate,
 
-    db: Session = Depends(
-        get_db
-    )
+current_user:str=
+
+Depends(
+
+get_current_user
+
+),
+
+db:Session=
+
+Depends(
+
+get_db
+
+)
 
 ):
 
-    ticket = db.query(
+
+    ticket=db.query(
+
         Ticket
+
     ).filter(
 
         Ticket.ticket_id
@@ -446,23 +615,55 @@ def update_ticket(
         )
 
 
-    ticket.status = data.status
+    old_status=ticket.status
+
+
+    ticket.status=data.status
+
+
+    if old_status != data.status:
+
+        history=StatusHistory(
+
+            ticket_id=
+
+            ticket_id,
+
+            old_status=
+
+            old_status,
+
+            new_status=
+
+            data.status
+
+        )
+
+        db.add(
+
+            history
+
+        )
 
 
     if data.notes:
 
-        note = Note(
+        note=Note(
 
             ticket_id=
+
             ticket_id,
 
             note_text=
+
             data.notes
 
         )
 
         db.add(
+
             note
+
         )
 
 
@@ -471,9 +672,10 @@ def update_ticket(
 
     return {
 
-        "success": True
+        "success":True
 
     }
+
 
 
 @app.post(
@@ -488,13 +690,24 @@ def chat(
 
 data:ChatRequest,
 
-db:Session=Depends(
+current_user:str=
+
+Depends(
+
+get_current_user
+
+),
+
+db:Session=
+
+Depends(
 
 get_db
 
 )
 
 ):
+
 
     question = data.question.lower()
 
@@ -652,3 +865,521 @@ Available Ticket Data:
 
     }
 
+
+
+
+
+@app.post(
+
+"/sync-emails"
+
+)
+
+
+def sync_emails(
+
+current_user:str=
+
+Depends(
+
+get_current_user
+
+),
+
+db:Session=
+
+Depends(
+
+get_db
+
+)
+
+):
+
+
+    service=get_gmail_service()
+
+
+    results=service.users().messages().list(
+
+        userId="me",
+
+        maxResults=10
+
+    ).execute()
+
+
+    messages=results.get(
+
+        "messages",
+
+        []
+
+    )
+
+
+    created=0
+
+    skipped=0
+
+    processed=0
+
+
+    for msg in messages:
+
+
+        processed += 1
+
+
+        message=service.users().messages().get(
+
+            userId="me",
+
+            id=msg["id"]
+
+        ).execute()
+
+
+        headers=message["payload"].get(
+
+            "headers",
+
+            []
+
+        )
+
+
+        subject=""
+
+        sender=""
+
+
+        for h in headers:
+
+            if h["name"]=="Subject":
+
+                subject=h["value"]
+
+            elif h["name"]=="From":
+
+                sender=h["value"]
+
+
+        customer_name=sender.split("<")[0].strip()
+
+
+        customer_email=sender.split("<")[-1].replace(
+
+            ">",
+
+            ""
+
+        )
+
+
+
+        description=""
+
+        payload=message["payload"]
+
+        import base64
+
+
+        if "parts" in payload:
+
+
+            for part in payload["parts"]:
+
+
+                if (
+
+                    part.get(
+
+                        "mimeType"
+
+                    )
+
+                    ==
+
+                    "text/plain"
+
+                ):
+
+
+                    data= part["body"].get(
+
+                        "data"
+
+                    )
+
+
+                    if data:
+
+
+                        raw_text=base64.urlsafe_b64decode(
+
+                            data
+
+                        ).decode(
+
+                            "utf-8",
+
+                            errors="ignore"
+
+                        )
+
+
+                        description=clean_email_body(
+
+                            raw_text
+
+                        )
+
+
+                        break
+
+
+        else:
+
+
+            data=payload.get(
+
+                "body",
+
+                {}
+
+            ).get(
+
+                "data"
+
+            )
+
+
+            if data:
+
+
+                raw_text=base64.urlsafe_b64decode(
+
+                    data
+
+                ).decode(
+
+                    "utf-8",
+
+                    errors="ignore"
+
+                )
+
+
+                description=clean_email_body(
+
+                    raw_text
+
+                )
+
+
+
+        existing=db.query(
+
+            Ticket
+
+        ).filter(
+
+            Ticket.subject==subject,
+
+            Ticket.customer_email==customer_email
+
+        ).first()
+
+
+        if existing:
+
+            skipped += 1
+
+            continue
+
+
+        last_ticket = db.query(
+
+            Ticket
+
+        ).order_by(
+
+            Ticket.id.desc()
+
+        ).first()
+
+
+        next_number = (
+
+            last_ticket.id + 1
+
+            if last_ticket
+
+            else 1
+
+        )
+
+
+        generated_ticket_id = (
+
+            f"TKT-{next_number:03d}"
+
+        )
+
+
+        new_ticket = Ticket(
+
+            ticket_id=
+
+            generated_ticket_id,
+
+            customer_name=
+
+            customer_name,
+
+            customer_email=
+
+            customer_email,
+
+            subject=
+
+            subject,
+
+            description=
+
+            description,
+
+            status="Open"
+
+        )
+
+
+        db.add(
+
+            new_ticket
+
+        )
+
+
+        db.flush()
+
+
+        created += 1
+
+
+    db.commit()
+
+
+    return {
+
+        "tickets_created":
+
+        created,
+
+        "skipped":
+
+        skipped,
+
+        "processed":
+
+        processed
+
+    }
+
+
+
+@app.post(
+
+"/signup",
+
+response_model=
+
+UserResponse
+
+)
+
+def signup(
+
+data:UserSignup,
+
+db:Session=
+
+Depends(
+
+get_db
+
+)
+
+):
+
+    user= User(
+
+        name=
+
+        data.name,
+
+        email=
+
+        data.email,
+
+        hashed_password=
+
+        hash_password(
+
+            data.password
+
+        )
+
+    )
+
+
+    try:
+
+        db.add(
+
+            user
+
+        )
+
+        db.commit()
+
+        db.refresh(
+
+            user
+
+        )
+
+    except IntegrityError:
+
+        db.rollback()
+
+        raise HTTPException(
+
+            status_code=400,
+
+            detail=
+
+            "Email Already Exists"
+
+        )
+
+
+    return user
+
+
+
+
+@app.post(
+
+"/login"
+
+)
+
+def login(
+
+data:LoginRequest,
+
+db:Session=
+
+Depends(
+
+get_db
+
+)
+
+):
+
+    user=db.query(
+
+        User
+
+    ).filter(
+
+        User.email
+
+        ==
+
+        data.email
+
+    ).first()
+
+
+    if (
+
+        not user
+
+        or
+
+        not verify_password(
+
+            data.password,
+
+            user.hashed_password
+
+        )
+
+    ):
+
+        raise HTTPException(
+
+            status_code=401,
+
+            detail=
+
+            "Invalid Credentials"
+
+        )
+
+
+    token=create_access_token(
+
+        {
+
+            "sub":
+
+            user.email
+
+        }
+
+    )
+
+
+    return {
+
+        "access_token":
+
+        token,
+
+        "token_type":
+
+        "bearer",
+
+        "name":
+
+        user.name
+
+    }
+
+
+@app.get(
+
+"/login-page"
+
+)
+
+def login_page():
+
+    return FileResponse(
+
+         "frontend/templates/login.html"
+    )
+
+
+
+
+@app.get("/dashboard")
+def dashboard():
+    return FileResponse(
+        TEMPLATE_DIR / "index.html"
+    )

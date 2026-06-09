@@ -1,27 +1,90 @@
+
 const params = new URLSearchParams(
-    window.location.search
+window.location.search
 )
 
-const ticketId = params.get("id")
+const ticketId =
+params.get("id")
+
+
+function handleUnauthorized(
+
+response
+
+){
+
+if(
+
+response.status===401
+
+){
+
+localStorage.clear()
+
+window.location.href=
+
+"/login-page"
+
+return true
+
+}
+
+return false
+
+}
 
 
 async function loadTicket(){
 
-    const response = await fetch(
+const response=
 
-        `/tickets/${ticketId}`
+await fetch(
 
-    )
+`/tickets/${ticketId}`,
 
-    const data = await response.json()
-    document.getElementById(
-        "status"
-        ).value=
+{
 
-        data.status
+headers:{
+
+Authorization:
+
+`Bearer ${localStorage.getItem("token")}`
+
+}
+
+}
+
+)
 
 
-   document.getElementById(
+if(
+
+handleUnauthorized(
+
+response
+
+)
+
+){
+
+return
+
+}
+
+
+const data=
+
+await response.json()
+
+
+document.getElementById(
+"status"
+).value=
+
+data.status
+
+
+document.getElementById(
 "details"
 ).innerHTML=
 
@@ -104,15 +167,80 @@ ${data.description}
 
 <h3>
 
+Status Timeline
+
+</h3>
+
+<div class="timeline">
+
+${
+
+(data.history || []).length
+
+?
+
+data.history.map(
+
+h=>`
+
+<div class="timeline-item">
+
+<div>
+
+${h.old_status}
+
+→
+
+${h.new_status}
+
+</div>
+
+<small>
+
+${new Date(
+
+h.changed_at
+
+).toLocaleString()}
+
+</small>
+
+</div>
+
+`
+
+).join("")
+
+:
+
+"<p>No Status Changes Yet</p>"
+
+}
+
+</div>
+
+</div>
+
+
+<div class="card">
+
+<h3>
+
 Notes History
 
 </h3>
 
 <ul>
 
-${data.notes.map(
+${
 
-n => `
+(data.notes || []).length
+
+?
+
+data.notes.map(
+
+n=>`
 
 <li>
 
@@ -122,7 +250,13 @@ ${n.note_text}
 
 `
 
-).join("")}
+).join("")
+
+:
+
+"<p>No Notes Added</p>"
+
+}
 
 </ul>
 
@@ -135,80 +269,104 @@ ${n.note_text}
 
 async function updateTicket(){
 
-    const status =
-    document.getElementById(
-        "status"
-    ).value
+const status=
+
+document.getElementById(
+"status"
+).value
 
 
-    const notes =
-    document.getElementById(
-        "notes"
-    ).value
+const notes=
+
+document.getElementById(
+"notes"
+).value
 
 
-    const response =
-    await fetch(
+const response=
 
-        `/tickets/${ticketId}`,
+await fetch(
 
-        {
+`/tickets/${ticketId}`,
 
-            method:"PUT",
+{
 
-            headers:{
+method:"PUT",
 
-                "Content-Type":
-                "application/json"
+headers:{
 
-            },
+"Content-Type":
 
-            body:JSON.stringify({
+"application/json",
 
-                status,
+Authorization:
 
-                notes
+`Bearer ${localStorage.getItem("token")}`
 
-            })
+},
 
-        }
+body:JSON.stringify({
 
-    )
+status,
 
+notes
 
-    if(response.ok){
+})
 
-                document.getElementById(
-        "message"
-        ).className=
+}
 
-        "success"
-
-        document.getElementById(
-        "message"
-        ).innerText=
-
-        "Updated Successfully"
+)
 
 
-        document.getElementById(
-            "notes"
-        ).value = ""
+if(
+
+handleUnauthorized(
+
+response
+
+)
+
+){
+
+return
+
+}
 
 
-        loadTicket()
+if(response.ok){
 
-    }
+document.getElementById(
+"message"
+).className=
 
-    else{
+"success"
 
-        document.getElementById(
-            "message"
-        ).innerText =
 
-        "Update Failed"
+document.getElementById(
+"message"
+).innerText=
 
-    }
+"Updated Successfully"
+
+
+document.getElementById(
+"notes"
+).value=""
+
+
+await loadTicket()
+
+}
+
+else{
+
+document.getElementById(
+"message"
+).innerText=
+
+"Update Failed"
+
+}
 
 }
 

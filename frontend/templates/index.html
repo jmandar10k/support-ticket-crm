@@ -23,17 +23,35 @@ Support CRM Dashboard
 
 </h1>
 
+<p id="welcomeUser"></p>
+
+<button onclick="logout()">
+🚪 Logout
+</button>
+
 <button
 
-onclick=
-
-window.location.href='/create'
+onclick="window.location.href='/create'"
 
 >
 
 + Create Ticket
 
 </button>
+
+
+<button
+
+onclick="syncEmails()"
+
+id="syncBtn"
+
+>
+
+Sync Emails
+
+</button>
+
 
 <br><br>
 
@@ -157,6 +175,14 @@ Send
 
 
 </div>
+
+<script src="/static/auth.js"></script>
+
+<script>
+
+checkAuth()
+
+</script>
 
 <script src="/static/index.js">
 
