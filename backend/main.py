@@ -1376,6 +1376,22 @@ def login_page():
     )
 
 
+@app.get(
+
+"/signup-page"
+
+)
+
+def signup_page():
+
+    return FileResponse(
+
+        TEMPLATE_DIR
+
+        / "signup.html"
+
+    )
+
 
 
 @app.get("/dashboard")
